@@ -4,11 +4,26 @@
 
 services:
   solana-localnet:
-    image: solanalabs/solana:latest
+    build: ./validator
+    platform: linux/amd64
     container_name: solana_validator
-    command: solana-test-validator --rpc-bind-address 0.0.0.0 --rpc-port 8899
+    command: ["--reset", "--rpc-port", "8899"]
     ports:
-      - "8899:8899"
+      - "8899:8899"   # RPC
+      - "8900:8900"   # WebSocket
+      - "9900:9900"   # Faucet
+    volumes:
+      - ledger:/ledger
+    ulimits:
+      nofile:
+        soft: 1000000
+        hard: 1000000
+    healthcheck:
+      test: ["CMD", "solana", "cluster-version", "--url", "http://127.0.0.1:8899"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
 
   api:
     build: .
@@ -19,3 +34,6 @@ services:
       - solana-localnet
     environment:
       - RPC_URL=http://solana-localnet:8899
+      - WS_URL=ws://solana-localnet:8900
+volumes:
+  ledger:
