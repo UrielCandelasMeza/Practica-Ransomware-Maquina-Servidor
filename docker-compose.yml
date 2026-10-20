@@ -1,0 +1,21 @@
+
+# Este servicio ejecuta todo lo que es la red temporal de solana 
+# y la api para poder ejecutar el ransomware
+
+services:
+  solana-localnet:
+    image: solanalabs/solana:latest
+    container_name: solana_validator
+    command: solana-test-validator --rpc-bind-address 0.0.0.0 --rpc-port 8899
+    ports:
+      - "8899:8899"
+
+  api:
+    build: .
+    container_name: ransomware_center
+    ports:
+      - "8000:8000"
+    depends_on:
+      - solana-localnet
+    environment:
+      - RPC_URL=http://solana-localnet:8899
